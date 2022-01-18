@@ -101,7 +101,7 @@ class O:
     def __sub__(self, other):
         return self + (-other)
 
-    def mul(other):
+    def mul(self, other):
         if isinstance(other, O):
             return O( (self.data[0]*other.data[0] - self.data[1]*other.data[1] - self.data[2]*other.data[2] - self.data[3]*other.data[3] - self.data[4]*other.data[4] - self.data[5]*other.data[5] - self.data[6]*other.data[6] - self.data[7]*other.data[7],
                        self.data[0]*other.data[1] + self.data[1]*other.data[0] + self.data[2]*other.data[3] - self.data[3]*other.data[2] + self.data[4]*other.data[5] - self.data[5]*other.data[4] - self.data[6]*other.data[7] + self.data[7]*other.data[6],
