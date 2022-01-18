@@ -112,15 +112,15 @@ class O:
                        self.data[0]*other.data[6] + self.data[1]*other.data[7] + self.data[2]*other.data[4] - self.data[3]*other.data[5] - self.data[4]*other.data[2] + self.data[5]*other.data[3] + self.data[6]*other.data[0] - self.data[7]*other.data[1],
                        self.data[0]*other.data[7] - self.data[1]*other.data[6] + self.data[2]*other.data[5] + self.data[3]*other.data[4] - self.data[4]*other.data[3] - self.data[5]*other.data[2] + self.data[6]*other.data[1] + self.data[7]*other.data[0]) )
         else:
-            raise ValueError("Can only multiply quaternion numbers by other quaternion numbers in mul method object")
+            raise ValueError("Can only multiply octonion numbers by other octonion numbers in mul method object")
     def __mul__(self, other):
         if isinstance(other, numbers.Number):
             return O( other*self.data )
         else:
-            raise ValueError("Can only multiply quaternion numbers by scalars in * operator")
+            raise ValueError("Can only multiply octonion numbers by scalars in * operator")
 
     def __rmul__(self, other):
         if isinstance(other, numbers.Number):
             return O( other*self.data )
         else:
-            raise ValueError("Can only multiply quaternion numbers by scalars in * operator")
+            raise ValueError("Can only multiply octonion numbers by scalars in * operator")
