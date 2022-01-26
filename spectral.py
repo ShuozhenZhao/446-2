@@ -35,10 +35,15 @@ class Fourier(Basis):
             raise NotImplementedError("Can only perform transforms for float64 or complex128")
 
     def _transform_to_grid_complex(self, data, axis, scale):
-        pass
+        newN = self.N * scale
+        newcoeff = np.zeros(newN,dtype = np.complex128)
+        newcoeff[0:(self.N/2-1)] = data[0:(self.N/2-1)]
+        newcoeff[-(self.N/2-1):] = data[-(self.N/2-1):]
+        self.data = scipy.fft.ifft(newcoeff) * (self.N * scale)
 
     def _transform_to_coeff_complex(self, data, axis):
-        pass
+        self.data = scipy.fft.fft(self.data)/(self.N*scale)
+        self.data[self.N/2] = 0
 
     def _transform_to_grid_real(self, data, axis, scale):
         pass
@@ -103,12 +108,9 @@ class Field:
         self.coeff[axis] = False
 
     def require_grid_space(self, scales=None):
-        if not self.coeff.any(): 
+        if not self.coeff.any():
             # already in full grid space
             return
         else:
             self.towards_grid_space(scales)
             self.require_grid_space(scales)
-
-
-
