@@ -36,14 +36,15 @@ class Fourier(Basis):
 
     def _transform_to_grid_complex(self, data, axis, scale):
         newcoeff = np.zeros(int(self.N * scale),dtype = np.complex128)
-        newcoeff[0:(self.N//2-1)] = data[0:(self.N//2-1)]
-        newcoeff[(-self.N//2):] = data[(-self.N//2):]
-        data = scipy.fft.ifft(newcoeff) * (int(self.N * scale))
+        newcoeff[0:(self.N//2-1)] = np.copy(data[0:(self.N//2-1)])
+        newcoeff[(-self.N//2):] = np.copy(data[(-self.N//2):])
+        return scipy.fft.ifft(newcoeff) * (int(self.N*scale))
 
 
     def _transform_to_coeff_complex(self, data, axis):
-        data = scipy.fft.fft(data)/self.N
-        data[self.N//2] = 0
+        coeffdata = scipy.fft.fft(data)/len(data)
+        coeffdata[-len(data)//2] = 0
+        return coeffdata
 
     def _transform_to_grid_real(self, data, axis, scale):
         pass
