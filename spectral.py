@@ -35,15 +35,15 @@ class Fourier(Basis):
             raise NotImplementedError("Can only perform transforms for float64 or complex128")
 
     def _transform_to_grid_complex(self, data, axis, scale):
-        newN = self.N * scale
-        newcoeff = np.zeros(newN,dtype = np.complex128)
-        newcoeff[0:(self.N/2-1)] = data[0:(self.N/2-1)]
-        newcoeff[-(self.N/2-1):] = data[-(self.N/2-1):]
-        self.data = scipy.fft.ifft(newcoeff) * (self.N * scale)
+        newcoeff = np.zeros(int(self.N * scale),dtype = np.complex128)
+        newcoeff[0:(self.N//2-1)] = data[0:(self.N//2-1)]
+        newcoeff[(-self.N//2):] = data[(-self.N//2):]
+        data = scipy.fft.ifft(newcoeff) * (int(self.N * scale))
+
 
     def _transform_to_coeff_complex(self, data, axis):
-        self.data = scipy.fft.fft(self.data)/(self.N*scale)
-        self.data[self.N/2] = 0
+        data = scipy.fft.fft(data)/self.N
+        data[self.N//2] = 0
 
     def _transform_to_grid_real(self, data, axis, scale):
         pass
