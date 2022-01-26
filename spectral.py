@@ -50,10 +50,21 @@ class Fourier(Basis):
         return newcoeff
 
     def _transform_to_grid_real(self, data, axis, scale):
-        pass
+        complexcoeff = np.zeros(self.N//2+1,dtype = np.complex128)
+        newcoeff = np.zeros(int(self.N * scale)//2+1,dtype = np.complex128)
+        complexcoeff[:self.N//2] = np.copy(data[::2]/2+1j*data[1::2]/2)
+        newcoeff[:self.N//2] = np.copy(complexcoeff[:self.N//2])
+        return scipy.fft.irfft(newcoeff) * (int(self.N*scale))
+
 
     def _transform_to_coeff_real(self, data, axis):
-        pass
+        complexcoeff = scipy.fft.rfft(data)/len(data)
+        newcoeff = np.copy(complexcoeff[0:self.N//2])
+        realcoeff = np.zeros(self.N,dtype = np.float64)
+        realcoeff[::2] = 2*newcoeff[:].real
+        realcoeff[1::2] = 2*newcoeff[:].imag
+        realcoeff[1] = 0
+        return realcoeff
 
 
 class Domain:
