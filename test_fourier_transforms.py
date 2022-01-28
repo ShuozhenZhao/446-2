@@ -119,3 +119,4 @@ def test_Fourier_Real_normalizationC(N, scale):
     f0 = np.zeros(f.data.shape)
     f0[11] = 1
     assert np.allclose(f.data, f0)
+
