@@ -21,7 +21,7 @@ class KdVEquation:
         p.M = I
         if dtype == np.complex128:
             diag = -1j*x_basis.wavenumbers(dtype)**3
-            p.L = sparse.diags(diag)
+            p.L = sparse.diags(diag,dtype=dtype)
         elif dtype == np.float64:
             diag1 = np.zeros(x_basis.N-1)
             diag2 = np.zeros(x_basis.N-1)
@@ -30,7 +30,7 @@ class KdVEquation:
             diag2 = -diag1
             diag = [diag1,diag2]
             off = [1,-1]
-            diag = sparse.diags(diag,off).toarray()
+            diag = sparse.diags(diag,off,dtype=dtype).toarray()
             p.L = diag
 
     def evolve(self, timestepper, dt, num_steps):
@@ -73,9 +73,10 @@ class SHEquation:
 
         x_basis = domain.bases[0]
         I = sparse.eye(x_basis.N,dtype = dtype)
+        p.M = I
         r = -0.3
         diag = 1-r-2*x_basis.wavenumbers(dtype)**2 + x_basis.wavenumbers(dtype)**4
-        p.L = sparse.diags(diag)
+        p.L = sparse.diags(diag,dtype=dtype)
 
     def evolve(self, timestepper, dt, num_steps):
         ts = timestepper(self.problem)
