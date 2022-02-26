@@ -1,94 +1,125 @@
 
-import numpy as np
 import spectral
+import numpy as np
 from scipy import sparse
 
-class KdVEquation:
 
-    def __init__(self, domain, u):
-        self.dtype = u.dtype
-        dtype = self.dtype
-        self.u = u
-        self.domain = domain
-        self.dudx = spectral.Field(domain, dtype=dtype)
-        self.RHS = spectral.Field(domain, dtype=dtype) # 6u*dudx
-        self.problem = spectral.InitialValueProblem(domain, [self.u], [self.RHS], dtype=dtype)
+class SoundWaves:
 
-        p = self.problem.pencils[0]
-
-        x_basis = domain.bases[0]
-        I = sparse.eye(x_basis.N,dtype = dtype)
-        p.M = I
-        if dtype == np.complex128:
-            diag = -1j*x_basis.wavenumbers(dtype)**3
-            p.L = sparse.diags(diag,dtype=dtype)
-        elif dtype == np.float64:
-            diag1 = np.zeros(x_basis.N-1)
-            diag2 = np.zeros(x_basis.N-1)
-            diag1[::2] = x_basis.wavenumbers(dtype)[::2]
-            diag1 = diag1**3
-            diag2 = -diag1
-            diag = [diag1,diag2]
-            off = [1,-1]
-            diag = sparse.diags(diag,off,dtype=dtype).toarray()
-            p.L = diag
+    def __init__(self, domain, u, p, p0):
+        pass
 
     def evolve(self, timestepper, dt, num_steps):
         ts = timestepper(self.problem)
-        x_basis = self.domain.bases[0]
-        u = self.u
-        dudx = self.dudx
-        RHS = self.RHS
 
         for i in range(num_steps):
-            # need to calculate 6u*ux and put it into RHS
-            u.require_coeff_space()
-            dudx.require_coeff_space()
-            if self.dtype == np.complex128:
-                dudx.data = 1j*x_basis.wavenumbers(self.dtype)*u.data
-            elif self.dtype == np.float64:
-                dudx.data[::2] = -u.data[1::2]
-                dudx.data[1::2] = u.data[::2]
-                dudx.data = x_basis.wavenumbers(self.dtype)*dudx.data
-            u.require_grid_space(scales=3/2)
-            dudx.require_grid_space(scales=3/2)
-            RHS.require_grid_space(scales=3/2)
-            RHS.data = 6*u.data * dudx.data
+            # take a timestep
 
-            # take timestep
+
+class CGLEquation:
+
+    def __init__(self, domain, u):
+        pass
+
+    def evolve(self, timestepper, dt, num_steps):
+        ts = timestepper(self.problem)
+
+        for i in range(num_steps):
+            # take a timestep
+
+
+class BurgersEquation:
+    
+    def __init__(self, domain, u, nu):
+        dtype = u.dtype
+        self.u = u
+        self.u_RHS = spectral.Field(domain, dtype=dtype)
+        self.dudx = spectral.Field(domain, dtype=dtype)
+        self.problem = spectral.InitialValueProblem(domain, [u], [self.u_RHS], dtype=dtype)
+        
+        p = self.problem.pencils[0]
+        x_basis = domain.bases[0]
+        I = sparse.eye(x_basis.N)
+        p.M = I
+        D = x_basis.derivative_matrix(dtype)
+        p.L = -nu*D@D
+        
+    def evolve(self, timestepper, dt, num_steps):
+        ts = timestepper(self.problem)
+        u = self.u
+        dudx = self.dudx
+        u_RHS = self.u_RHS
+        for i in range(num_steps):
+            dudx.require_coeff_space()
+            u.require_coeff_space()
+            dudx.data = u.differentiate(0)
+            u.require_grid_space()
+            dudx.require_grid_space()
+            u_RHS.require_grid_space()
+            u_RHS.data = -u.data*dudx.data
             ts.step(dt)
+
+
+class KdVEquation:
+    
+    def __init__(self, domain, u):
+        dtype = u.dtype
+        self.dealias = 3/2
+        self.u = u
+        self.u_RHS = spectral.Field(domain, dtype=dtype)
+        self.dudx = spectral.Field(domain, dtype=dtype)
+        self.problem = spectral.InitialValueProblem(domain, [u], [self.u_RHS], dtype=dtype)
+        
+        p = self.problem.pencils[0]
+        x_basis = domain.bases[0]
+        I = sparse.eye(x_basis.N)
+        p.M = I
+        D = x_basis.derivative_matrix(dtype)
+        p.L = D@D@D
+        
+    def evolve(self, timestepper, dt, num_steps):
+        ts = timestepper(self.problem)
+        u = self.u
+        dudx = self.dudx
+        u_RHS = self.u_RHS
+        for i in range(num_steps):
+            dudx.require_coeff_space()
+            u.require_coeff_space()
+            dudx.data = u.differentiate(0)
+            u.require_grid_space(scales=self.dealias)
+            dudx.require_grid_space(scales=self.dealias)
+            u_RHS.require_grid_space(scales=self.dealias)
+            u_RHS.data = 6*u.data*dudx.data
+            ts.step(dt)
+
 
 class SHEquation:
 
     def __init__(self, domain, u):
-        self.dtype = u.dtype
-        dtype = self.dtype
+        dtype = u.dtype
+        self.dealias = 2
         self.u = u
-        self.domain = domain
-        self.dudx = spectral.Field(domain, dtype=dtype)
-        self.RHS = spectral.Field(domain, dtype=dtype) # -u**3+1.8*u**2
-        self.problem = spectral.InitialValueProblem(domain, [self.u], [self.RHS], dtype=dtype)
+        self.u_RHS = spectral.Field(domain, dtype=dtype)
+        self.problem = spectral.InitialValueProblem(domain, [u], [self.u_RHS], dtype=dtype)
 
         p = self.problem.pencils[0]
-
         x_basis = domain.bases[0]
-        I = sparse.eye(x_basis.N,dtype = dtype)
+        I = sparse.eye(x_basis.N)
         p.M = I
-        r = -0.3
-        diag = 1-r-2*x_basis.wavenumbers(dtype)**2 + x_basis.wavenumbers(dtype)**4
-        p.L = sparse.diags(diag,dtype=dtype)
+        D = x_basis.derivative_matrix(dtype)
+        op = I + D@D
+        p.L = op @ op + 0.3*I
 
     def evolve(self, timestepper, dt, num_steps):
         ts = timestepper(self.problem)
         u = self.u
-        RHS = self.RHS
-
+        u_RHS = self.u_RHS
         for i in range(num_steps):
-            # need to calculate -u**3+1.8*u**2 and put it into RHS
             u.require_coeff_space()
-            u.require_grid_space(scales=3)
-            RHS.require_grid_space(scales=3)
-            RHS.data = -u.data**3+1.8*u.data**2
-
-            # take timestep
+            u.require_grid_space(scales=self.dealias)
+            u_RHS.require_grid_space(scales=self.dealias)
+            u_RHS.data = 1.8*u.data**2 - u.data**3
             ts.step(dt)
+
+
+
