@@ -115,6 +115,10 @@ class CGLEquation:
         diag2 = -np.ones(N-2)/2
         self.C = C = sparse.diags((diag0, diag2), offsets=(0,2))
 
+        u.require_coeff_space()
+        ux.require_coeff_space()
+        ux.data = sparse.linalg.spsolve(self.C, self.D @ u.data)
+
         M = sparse.csr_matrix((2*N+2,2*N+2))
         M[N:2*N, :N] = C
         p.M = M
@@ -132,7 +136,7 @@ class CGLEquation:
 
         Z = np.zeros((N, N))
         L = sparse.bmat([[-D, C],
-                         [-C, -(1+0.5*1j)*D]])
+                         [-C, -(1+0.5j)*D]])
         L = sparse.bmat([[      L,   cols],
                          [BC_rows, corner]])
         L = L.tocsr()
@@ -148,10 +152,10 @@ class CGLEquation:
             u.require_coeff_space()
             ux.require_coeff_space()
             ux_RHS.require_coeff_space()
-            u.require_grid_space(scales=3/2)
-            ux.require_grid_space(scales=3/2)
-            ux_RHS.require_grid_space(scales=3/2)
-            ux_RHS.data = -(1-1.76*1j)*abs(u.data)**2*u.data
+            u.require_grid_space(scales=2)
+            ux.require_grid_space(scales=2)
+            ux_RHS.require_grid_space(scales=2)
+            ux_RHS.data = -(1-1.76j)*(np.absolute(u.data)**2)*u.data
             ux_RHS.require_coeff_space()
             ux_RHS.data = self.C @ ux_RHS.data
             u.require_coeff_space()
