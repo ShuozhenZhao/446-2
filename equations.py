@@ -93,7 +93,7 @@ class CGLEquation:
         self.u = u
         self.domain = domain
         self.dtype = dtype = u.dtype
-        self.ux = spectral.Field(domain, dtype=dtype)
+        self.ux = ux = spectral.Field(domain, dtype=dtype)
         self.u_RHS = spectral.Field(domain, dtype=dtype)
         self.ux_RHS = spectral.Field(domain, dtype=dtype)
         le = domain.bases[0].interval[1] - domain.bases[0].interval[0]
